@@ -13,12 +13,38 @@
                 <materialDesign:PackIcon Kind="Play" VerticalAlignment="Center" Foreground="Green" MouseUp="PlayAnimationHandler" />
             </StackPanel>
         </StackPanel>
-        <StackPanel DockPanel.Dock="Bottom" Background="DimGray" Height="150" MouseUp="SetTimelineCursorHandler">
-            <Canvas x:Name="timeline">
-                <Line x:Name="timelineCursor" X1="0" Y1="0" X2="0" Y2="150" Stroke="White" />
-                <materialDesign:PackIcon Kind="Key" Foreground="Yellow" Width="10" Canvas.Left="-5" />
-            </Canvas>
-        </StackPanel>
+        <DockPanel DockPanel.Dock="Bottom" Height="150">
+            <StackPanel DockPanel.Dock="Top" Background="DarkSlateGray" Height="25" Orientation="Horizontal">
+                <materialDesign:PackIcon Kind="ArrowBackCircle" VerticalAlignment="Center" Foreground="White" Margin="5, 0" MouseUp="GoToPreviousKeyHandler" />
+                <materialDesign:PackIcon Kind="ArrowRightCircle" VerticalAlignment="Center" Foreground="White" Margin="5, 0" MouseUp="GoToNextKeyHandler" />
+                <ComboBox x:Name="interpolation" Width="150" Margin="10, 0" SelectedIndex="0">
+                    <ComboBoxItem Content="Синусоидная" />
+                    <ComboBoxItem Content="Квинтовая" />
+                    <ComboBoxItem Content="Четвертичная" />
+                    <ComboBoxItem Content="Квадратичная" />
+                    <ComboBoxItem Content="Силовая" />
+                    <ComboBoxItem Content="Экспоненциальная" />
+                    <ComboBoxItem Content="Эластичная" />
+                    <ComboBoxItem Content="Кубическая" />
+                    <ComboBoxItem Content="Круговая" />
+                    <ComboBoxItem Content="Скачащая" />
+                    <ComboBoxItem Content="Обратная" />
+                </ComboBox>
+                <ComboBox x:Name="interpolationType" Width="150" Margin="10, 0" SelectedIndex="0">
+                    <ComboBoxItem Content="Переход значений" />
+                    <ComboBoxItem Content="Переход из начала" />
+                    <ComboBoxItem Content="Переход в значении" />
+                </ComboBox>
+            </StackPanel>
+            <ScrollViewer DockPanel.Dock="Bottom" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Hidden" ScrollChanged="ExpandTimelineHandler">
+                <StackPanel Background="DimGray" Orientation="Horizontal" MouseUp="SetTimelineCursorHandler" Height="125">
+                    <Canvas x:Name="timeline" Width="2500">
+                        <Line x:Name="timelineCursor" X1="0" Y1="0" X2="0" Y2="150" Stroke="White" />
+                        <materialDesign:PackIcon Kind="Key" Foreground="Yellow" Width="10" Canvas.Left="-5" />
+                    </Canvas>
+                </StackPanel>
+            </ScrollViewer>
+        </DockPanel>
         <StackPanel DockPanel.Dock="Right" Background="Orange" Width="150">
             <StackPanel>
                 <TextBlock Text="Положение x1" Margin="5, 5, 0, 0" />
@@ -44,7 +70,9 @@
                                 <PathFigure>
                                     <PathFigure.Segments>
                                         <PathSegmentCollection>
-                                            <BezierSegment x:Name="mainCurve" Point1="0 0" Point2="35 200" Point3="100 0" />
+                                            <BezierSegment x:Name="mainCurve" Point1="0 0" Point2="35 200" Point3="100 0">
+                                                
+                                            </BezierSegment>
                                         </PathSegmentCollection>
                                     </PathFigure.Segments>
                                 </PathFigure>
