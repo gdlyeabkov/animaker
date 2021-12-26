@@ -48,9 +48,9 @@
         <StackPanel DockPanel.Dock="Right" Background="Orange" Width="150">
             <StackPanel>
                 <TextBlock Text="Положение x1" Margin="5, 5, 0, 0" />
-                <TextBox x:Name="xPostiion" Margin="5" KeyUp="SetKeyXPositionHandler" />
+                <TextBox x:Name="xPostiion" Text="0" Margin="5" KeyUp="SetKeyXPositionHandler" />
                 <TextBlock Text="Положение x2" Margin="5, 0" />
-                <TextBox x:Name="yPostiion" Margin="5" KeyUp="SetKeyYPositionHandler" />
+                <TextBox x:Name="yPostiion" Text="0" Margin="5" KeyUp="SetKeyYPositionHandler" />
                 <!--
                 <TextBlock Text="Положение x2" Margin="5, 0" />
                 <TextBox x:Name="yPostiion" Margin="5" KeyUp="SetKeyYPositionHandler" />

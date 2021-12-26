@@ -300,6 +300,21 @@ namespace Animaker
                 xPostiion.Text = "0";
                 yPostiion.Text = "0";
                 mainCurve.Point1 = new Point(0, 0);
+
+                PackIcon keyFrameIcon = new PackIcon();
+                keyFrameIcon.Width = 10;
+                keyFrameIcon.Kind = PackIconKind.Key;
+                keyFrameIcon.Foreground = Brushes.Yellow;
+                ContextMenu keyFrameIconContextMenu = new ContextMenu();
+                MenuItem keyFrameIconContextMenuItem = new MenuItem();
+                keyFrameIconContextMenuItem.Header = "Удалить ключевой кадр";
+                keyFrameIconContextMenuItem.DataContext = ((int)(keyframes.IndexOf(keyframe)));
+                keyFrameIconContextMenuItem.Click += RemoveKeyFrameHandler;
+                keyFrameIconContextMenu.Items.Add(keyFrameIconContextMenuItem);
+                keyFrameIcon.ContextMenu = keyFrameIconContextMenu;
+                Canvas.SetLeft(keyFrameIcon, cursor - keyFrameIcon.Width / 2);
+                timeline.Children.Add(keyFrameIcon);
+
             } else
             {
                 debugger.Speak("ключ уже существует");
@@ -308,12 +323,6 @@ namespace Animaker
                 yPostiion.Text = ((int)(key["y"])).ToString();
                 mainCurve.Point1 = new Point(((int)(keyframes[keyframes.IndexOf(key)]["x"])), ((int)(keyframes[keyframes.IndexOf(key)]["y"])));
             }
-            PackIcon keyFrameIcon = new PackIcon();
-            keyFrameIcon.Width = 10;
-            keyFrameIcon.Kind = PackIconKind.Key;
-            keyFrameIcon.Foreground = Brushes.Yellow;
-            Canvas.SetLeft(keyFrameIcon, cursor - keyFrameIcon.Width / 2);
-            timeline.Children.Add(keyFrameIcon);
 
         }
 
@@ -444,5 +453,16 @@ namespace Animaker
                 timeline.Width += 500;
             }
         }
+
+        private void RemoveKeyFrameHandler(object sender, RoutedEventArgs e)
+        {
+            debugger.Speak("Удалить ключевой кадр");
+            // PackIcon keyFrame = ((PackIcon)(((ContextMenu)(((MenuItem)(sender)).Parent)).Parent));
+            MenuItem keyFrame = ((MenuItem)(sender));
+            int keyFrameParam = Int32.Parse(keyFrame.DataContext.ToString());
+            keyframes.RemoveAt(keyFrameParam);
+            timeline.Children.Remove(keyFrame);
+        }
+
     }
 }
