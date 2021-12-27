@@ -27,6 +27,7 @@ namespace Animaker
         public SpeechSynthesizer debugger;
         public List<Dictionary<String, Object>> keyframes;
         public List<PointAnimation> animations;
+        public int selectedPoint = 1;
 
         public MainWindow()
         {
@@ -39,15 +40,27 @@ namespace Animaker
             animations = new List<PointAnimation>();
 
             Dictionary<String, Object> defaultKeyframe = new Dictionary<String, Object>();
-            defaultKeyframe.Add("x", 0);
-            defaultKeyframe.Add("y", 0);
+            defaultKeyframe.Add("x1", 0);
+            defaultKeyframe.Add("y1", 0);
+            defaultKeyframe.Add("x2", 35);
+            defaultKeyframe.Add("y2", 200);
+            defaultKeyframe.Add("x3", 100);
+            defaultKeyframe.Add("y3", 0);
             defaultKeyframe.Add("meta", 0);
             keyframes.Add(defaultKeyframe);
+
+            DrawKeyFramesLabels();
 
         }
 
         private void PlayAnimationHandler(object sender, MouseButtonEventArgs e)
         {
+            
+            pointSelector.Visibility = Visibility.Collapsed;
+            pointOne.Visibility = Visibility.Collapsed;
+            pointTwo.Visibility = Visibility.Collapsed;
+            pointThree.Visibility = Visibility.Collapsed;
+
             animations.Clear();
             PointAnimation defautlStateAnimation = new PointAnimation();
             defautlStateAnimation.Duration = new Duration(TimeSpan.FromSeconds(0));
@@ -56,12 +69,12 @@ namespace Animaker
                 if (keyframes.IndexOf(keyframe) != keyframes.Count - 1) {
                     if (keyframes.IndexOf(keyframe) == 0)
                     {
-                        defautlStateAnimation.From = new Point(((int)(keyframe["x"])), ((int)(keyframe["y"])));
-                        defautlStateAnimation.To = new Point(((int)(keyframe["x"])), ((int)(keyframe["y"])));
+                        defautlStateAnimation.From = new Point(((int)(keyframe["x1"])), ((int)(keyframe["y1"])));
+                        defautlStateAnimation.To = new Point(((int)(keyframe["x1"])), ((int)(keyframe["y1"])));
                     }
                     PointAnimation curveAnimation = new PointAnimation();
-                    curveAnimation.From = new Point(((int)(keyframe["x"])), ((int)(keyframe["y"])));
-                    curveAnimation.To = new Point(((int)(keyframes[keyframes.IndexOf(keyframe) + 1]["x"])), ((int)(keyframes[keyframes.IndexOf(keyframe) + 1]["y"])));
+                    curveAnimation.From = new Point(((int)(keyframe["x1"])), ((int)(keyframe["y1"])));
+                    curveAnimation.To = new Point(((int)(keyframes[keyframes.IndexOf(keyframe) + 1]["x1"])), ((int)(keyframes[keyframes.IndexOf(keyframe) + 1]["y1"])));
                     curveAnimation.Duration = new Duration(TimeSpan.FromSeconds((((int)(keyframes[keyframes.IndexOf(keyframe) + 1]["meta"])) - ((int)(keyframes[keyframes.IndexOf(keyframe)]["meta"]))) / 25));
                     debugger.Speak("продолжительность анимации " + ((((int)(keyframes[keyframes.IndexOf(keyframe) + 1]["meta"])) - ((int)(keyframes[keyframes.IndexOf(keyframe)]["meta"]))) / 25).ToString() + " кадров");
                     if (((ComboBoxItem)(interpolation.Items[interpolation.SelectedIndex])).Content == "Синусоидная")
@@ -242,29 +255,442 @@ namespace Animaker
                     }
 
                     animations.Add(curveAnimation);
-                    curveAnimation.Completed += delegate
-                    {
-                        if (animations.IndexOf(curveAnimation) < animations.Count - 1)
-                        {
-                            mainCurve.BeginAnimation(BezierSegment.Point1Property, animations[animations.IndexOf(curveAnimation) + 1]);
-                        } else
-                        {
-                            debugger.Speak("конец анимации");
-                            mainCurve.BeginAnimation(BezierSegment.Point1Property, null);
-                            mainCurve.Point1 = ((Point)(defautlStateAnimation.To));
-                            timelineCursor.BeginAnimation(Line.X1Property, null);
-                            timelineCursor.BeginAnimation(Line.X2Property, null);
-                            xPostiion.Text = ((int)(keyframes[0]["x"])).ToString();
-                            yPostiion.Text = ((int)(keyframes[0]["y"])).ToString();
 
+                    /*
+                     *  начало
+                     */
+
+                    curveAnimation = new PointAnimation();
+                    curveAnimation.From = new Point(((int)(keyframe["x2"])), ((int)(keyframe["y2"])));
+                    curveAnimation.To = new Point(((int)(keyframes[keyframes.IndexOf(keyframe) + 1]["x2"])), ((int)(keyframes[keyframes.IndexOf(keyframe) + 1]["y2"])));
+                    curveAnimation.Duration = new Duration(TimeSpan.FromSeconds((((int)(keyframes[keyframes.IndexOf(keyframe) + 1]["meta"])) - ((int)(keyframes[keyframes.IndexOf(keyframe)]["meta"]))) / 25));
+                    debugger.Speak("продолжительность анимации " + ((((int)(keyframes[keyframes.IndexOf(keyframe) + 1]["meta"])) - ((int)(keyframes[keyframes.IndexOf(keyframe)]["meta"]))) / 25).ToString() + " кадров");
+                    if (((ComboBoxItem)(interpolation.Items[interpolation.SelectedIndex])).Content == "Синусоидная")
+                    {
+                        curveAnimation.EasingFunction = new SineEase();
+                        if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход значений")
+                        {
+                            ((SineEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseInOut;
                         }
-                    };
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход из начала")
+                        {
+                            ((SineEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход в значении")
+                        {
+                            ((SineEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseIn;
+                        }
+                    }
+                    else if (((ComboBoxItem)(interpolation.Items[interpolation.SelectedIndex])).Content == "Квинтовая")
+                    {
+                        curveAnimation.EasingFunction = new QuinticEase();
+                        if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход значений")
+                        {
+                            ((QuinticEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseInOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход из начала")
+                        {
+                            ((QuinticEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход в значении")
+                        {
+                            ((QuinticEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseIn;
+                        }
+                    }
+                    else if (((ComboBoxItem)(interpolation.Items[interpolation.SelectedIndex])).Content == "Четвертичная")
+                    {
+                        curveAnimation.EasingFunction = new QuarticEase();
+                        if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход значений")
+                        {
+                            ((QuarticEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseInOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход из начала")
+                        {
+                            ((QuarticEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход в значении")
+                        {
+                            ((QuarticEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseIn;
+                        }
+                    }
+                    else if (((ComboBoxItem)(interpolation.Items[interpolation.SelectedIndex])).Content == "Квадратичная")
+                    {
+                        curveAnimation.EasingFunction = new QuadraticEase();
+                        if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход значений")
+                        {
+                            ((QuadraticEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseInOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход из начала")
+                        {
+                            ((QuadraticEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход в значении")
+                        {
+                            ((QuadraticEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseIn;
+                        }
+                    }
+                    else if (((ComboBoxItem)(interpolation.Items[interpolation.SelectedIndex])).Content == "Силовая")
+                    {
+                        curveAnimation.EasingFunction = new PowerEase();
+                        if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход значений")
+                        {
+                            ((PowerEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseInOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход из начала")
+                        {
+                            ((PowerEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход в значении")
+                        {
+                            ((PowerEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseIn;
+                        }
+                    }
+                    else if (((ComboBoxItem)(interpolation.Items[interpolation.SelectedIndex])).Content == "Экспоненциальная")
+                    {
+                        curveAnimation.EasingFunction = new ExponentialEase();
+                        if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход значений")
+                        {
+                            ((ExponentialEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseInOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход из начала")
+                        {
+                            ((ExponentialEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход в значении")
+                        {
+                            ((ExponentialEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseIn;
+                        }
+                    }
+                    else if (((ComboBoxItem)(interpolation.Items[interpolation.SelectedIndex])).Content == "Эластичная")
+                    {
+                        curveAnimation.EasingFunction = new ElasticEase();
+                        if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход значений")
+                        {
+                            ((ElasticEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseInOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход из начала")
+                        {
+                            ((ElasticEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход в значении")
+                        {
+                            ((ElasticEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseIn;
+                        }
+                    }
+                    else if (((ComboBoxItem)(interpolation.Items[interpolation.SelectedIndex])).Content == "Кубическая")
+                    {
+                        curveAnimation.EasingFunction = new CubicEase();
+                        if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход значений")
+                        {
+                            ((CubicEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseInOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход из начала")
+                        {
+                            ((CubicEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход в значении")
+                        {
+                            ((CubicEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseIn;
+                        }
+                    }
+                    else if (((ComboBoxItem)(interpolation.Items[interpolation.SelectedIndex])).Content == "Круговая")
+                    {
+                        curveAnimation.EasingFunction = new CircleEase();
+                        if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход значений")
+                        {
+                            ((CircleEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseInOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход из начала")
+                        {
+                            ((CircleEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход в значении")
+                        {
+                            ((CircleEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseIn;
+                        }
+                    }
+                    else if (((ComboBoxItem)(interpolation.Items[interpolation.SelectedIndex])).Content == "Скачащая")
+                    {
+                        curveAnimation.EasingFunction = new BounceEase();
+                        if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход значений")
+                        {
+                            ((BounceEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseInOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход из начала")
+                        {
+                            ((BounceEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход в значении")
+                        {
+                            ((BounceEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseIn;
+                        }
+                    }
+                    else if (((ComboBoxItem)(interpolation.Items[interpolation.SelectedIndex])).Content == "Обратная")
+                    {
+                        curveAnimation.EasingFunction = new BackEase();
+                        if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход значений")
+                        {
+                            ((BackEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseInOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход из начала")
+                        {
+                            ((BackEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход в значении")
+                        {
+                            ((BackEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseIn;
+                        }
+                    }
+
+                    animations.Add(curveAnimation);
+                    //
+
+                    curveAnimation = new PointAnimation();
+                    curveAnimation.From = new Point(((int)(keyframe["x3"])), ((int)(keyframe["y3"])));
+                    curveAnimation.To = new Point(((int)(keyframes[keyframes.IndexOf(keyframe) + 1]["x3"])), ((int)(keyframes[keyframes.IndexOf(keyframe) + 1]["y3"])));
+                    curveAnimation.Duration = new Duration(TimeSpan.FromSeconds((((int)(keyframes[keyframes.IndexOf(keyframe) + 1]["meta"])) - ((int)(keyframes[keyframes.IndexOf(keyframe)]["meta"]))) / 25));
+                    debugger.Speak("продолжительность анимации " + ((((int)(keyframes[keyframes.IndexOf(keyframe) + 1]["meta"])) - ((int)(keyframes[keyframes.IndexOf(keyframe)]["meta"]))) / 25).ToString() + " кадров");
+                    if (((ComboBoxItem)(interpolation.Items[interpolation.SelectedIndex])).Content == "Синусоидная")
+                    {
+                        curveAnimation.EasingFunction = new SineEase();
+                        if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход значений")
+                        {
+                            ((SineEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseInOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход из начала")
+                        {
+                            ((SineEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход в значении")
+                        {
+                            ((SineEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseIn;
+                        }
+                    }
+                    else if (((ComboBoxItem)(interpolation.Items[interpolation.SelectedIndex])).Content == "Квинтовая")
+                    {
+                        curveAnimation.EasingFunction = new QuinticEase();
+                        if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход значений")
+                        {
+                            ((QuinticEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseInOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход из начала")
+                        {
+                            ((QuinticEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход в значении")
+                        {
+                            ((QuinticEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseIn;
+                        }
+                    }
+                    else if (((ComboBoxItem)(interpolation.Items[interpolation.SelectedIndex])).Content == "Четвертичная")
+                    {
+                        curveAnimation.EasingFunction = new QuarticEase();
+                        if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход значений")
+                        {
+                            ((QuarticEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseInOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход из начала")
+                        {
+                            ((QuarticEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход в значении")
+                        {
+                            ((QuarticEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseIn;
+                        }
+                    }
+                    else if (((ComboBoxItem)(interpolation.Items[interpolation.SelectedIndex])).Content == "Квадратичная")
+                    {
+                        curveAnimation.EasingFunction = new QuadraticEase();
+                        if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход значений")
+                        {
+                            ((QuadraticEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseInOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход из начала")
+                        {
+                            ((QuadraticEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход в значении")
+                        {
+                            ((QuadraticEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseIn;
+                        }
+                    }
+                    else if (((ComboBoxItem)(interpolation.Items[interpolation.SelectedIndex])).Content == "Силовая")
+                    {
+                        curveAnimation.EasingFunction = new PowerEase();
+                        if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход значений")
+                        {
+                            ((PowerEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseInOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход из начала")
+                        {
+                            ((PowerEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход в значении")
+                        {
+                            ((PowerEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseIn;
+                        }
+                    }
+                    else if (((ComboBoxItem)(interpolation.Items[interpolation.SelectedIndex])).Content == "Экспоненциальная")
+                    {
+                        curveAnimation.EasingFunction = new ExponentialEase();
+                        if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход значений")
+                        {
+                            ((ExponentialEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseInOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход из начала")
+                        {
+                            ((ExponentialEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход в значении")
+                        {
+                            ((ExponentialEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseIn;
+                        }
+                    }
+                    else if (((ComboBoxItem)(interpolation.Items[interpolation.SelectedIndex])).Content == "Эластичная")
+                    {
+                        curveAnimation.EasingFunction = new ElasticEase();
+                        if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход значений")
+                        {
+                            ((ElasticEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseInOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход из начала")
+                        {
+                            ((ElasticEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход в значении")
+                        {
+                            ((ElasticEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseIn;
+                        }
+                    }
+                    else if (((ComboBoxItem)(interpolation.Items[interpolation.SelectedIndex])).Content == "Кубическая")
+                    {
+                        curveAnimation.EasingFunction = new CubicEase();
+                        if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход значений")
+                        {
+                            ((CubicEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseInOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход из начала")
+                        {
+                            ((CubicEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход в значении")
+                        {
+                            ((CubicEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseIn;
+                        }
+                    }
+                    else if (((ComboBoxItem)(interpolation.Items[interpolation.SelectedIndex])).Content == "Круговая")
+                    {
+                        curveAnimation.EasingFunction = new CircleEase();
+                        if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход значений")
+                        {
+                            ((CircleEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseInOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход из начала")
+                        {
+                            ((CircleEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход в значении")
+                        {
+                            ((CircleEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseIn;
+                        }
+                    }
+                    else if (((ComboBoxItem)(interpolation.Items[interpolation.SelectedIndex])).Content == "Скачащая")
+                    {
+                        curveAnimation.EasingFunction = new BounceEase();
+                        if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход значений")
+                        {
+                            ((BounceEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseInOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход из начала")
+                        {
+                            ((BounceEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход в значении")
+                        {
+                            ((BounceEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseIn;
+                        }
+                    }
+                    else if (((ComboBoxItem)(interpolation.Items[interpolation.SelectedIndex])).Content == "Обратная")
+                    {
+                        curveAnimation.EasingFunction = new BackEase();
+                        if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход значений")
+                        {
+                            ((BackEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseInOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход из начала")
+                        {
+                            ((BackEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseOut;
+                        }
+                        else if (((ComboBoxItem)(interpolationType.Items[interpolationType.SelectedIndex])).Content == "Переход в значении")
+                        {
+                            ((BackEase)(curveAnimation.EasingFunction)).EasingMode = EasingMode.EaseIn;
+                        }
+                    }
+
+                    animations.Add(curveAnimation);
+                    /*
+                     *  конец
+                     */
+
                 }
+            }
+            debugger.Speak("Всего анимаций: " + animations.Count);
+            foreach (PointAnimation animation in animations)
+            {
+                animation.Completed += delegate
+                {
+                    // debugger.Speak("закончилась анимация");
+                    if (animations.IndexOf(animation) < animations.Count - 1)
+                    {
+                        if ((animations.IndexOf(animation) + 1) % 3 == 0)
+                        {
+                            // debugger.Speak("дальше анимирую точку x1y1");
+                            mainCurve.BeginAnimation(BezierSegment.Point1Property, animations[animations.IndexOf(animation) + 1]);
+                        }
+                        else if ((animations.IndexOf(animation) + 1) % 2 == 0)
+                        {
+                            // debugger.Speak("дальше анимирую точку x3y3");
+                            mainCurve.BeginAnimation(BezierSegment.Point3Property, animations[animations.IndexOf(animation) + 1]); 
+                        }
+                        else if ((animations.IndexOf(animation) + 1) % 1 == 0)
+                        {
+                            // debugger.Speak("дальше анимирую точку x2y2");
+                            mainCurve.BeginAnimation(BezierSegment.Point2Property, animations[animations.IndexOf(animation) + 1]);
+                            
+                        }
+                        else
+                        {
+                            debugger.Speak("не могу анимировать точку");
+                        }
+                    }
+                    else
+                    {
+                        debugger.Speak("конец анимации");
+                        mainCurve.BeginAnimation(BezierSegment.Point1Property, null);
+                        mainCurve.BeginAnimation(BezierSegment.Point2Property, null);
+                        mainCurve.BeginAnimation(BezierSegment.Point3Property, null);
+                        mainCurve.Point1 = new Point(((int)(((Dictionary<String, Object>)(keyframes[0]))["x1"])), ((int)(((Dictionary<String, Object>)(keyframes[0]))["y1"])));
+                        mainCurve.Point2 = new Point(((int)(((Dictionary<String, Object>)(keyframes[0]))["x2"])), ((int)(((Dictionary<String, Object>)(keyframes[0]))["y2"])));
+                        mainCurve.Point3 = new Point(((int)(((Dictionary<String, Object>)(keyframes[0]))["x3"])), ((int)(((Dictionary<String, Object>)(keyframes[0]))["y3"])));
+                        timelineCursor.BeginAnimation(Line.X1Property, null);
+                        timelineCursor.BeginAnimation(Line.X2Property, null);
+                        xPostiion.Text = ((int)(keyframes[0]["x1"])).ToString();
+                        yPostiion.Text = ((int)(keyframes[0]["y1"])).ToString();
+
+                        pointSelector.Visibility = Visibility.Visible;
+                        pointOne.Visibility = Visibility.Visible;
+                        pointTwo.Visibility = Visibility.Visible;
+                        pointThree.Visibility = Visibility.Visible;
+
+                    }
+                };
             }
             if (animations.Count >= 1)
             {
                 
                 mainCurve.BeginAnimation(BezierSegment.Point1Property, animations[0]);
+                /*mainCurve.BeginAnimation(BezierSegment.Point2Property, animations[1]);
+                mainCurve.BeginAnimation(BezierSegment.Point3Property, animations[2]);*/
 
                 DoubleAnimation cursorAnimation = new DoubleAnimation();
                 cursorAnimation.From = ((double)(0));
@@ -293,13 +719,34 @@ namespace Animaker
                 // добавляем ключ
                 debugger.Speak("добавляем ключ");
                 Dictionary<String, Object>  keyframe = new Dictionary<String, Object>();
-                keyframe.Add("x", 0);
-                keyframe.Add("y", 0);
+                keyframe.Add("x1", 0);
+                keyframe.Add("y1", 0);
+                keyframe.Add("x2", 35);
+                keyframe.Add("y2", 200);
+                keyframe.Add("x3", 100);
+                keyframe.Add("y3", 0);
                 keyframe.Add("meta", cursor);
                 keyframes.Add(keyframe);
-                xPostiion.Text = "0";
-                yPostiion.Text = "0";
+                
+                if (selectedPoint == 1)
+                {
+                    xPostiion.Text = "0";
+                    yPostiion.Text = "0";
+                }
+                else if (selectedPoint == 2)
+                {
+                    xPostiion.Text = "35";
+                    yPostiion.Text = "200";
+                }
+                else if (selectedPoint == 3)
+                {
+                    xPostiion.Text = "100";
+                    yPostiion.Text = "0";
+                }
+                
                 mainCurve.Point1 = new Point(0, 0);
+                mainCurve.Point2 = new Point(35, 200);
+                mainCurve.Point3 = new Point(100, 0);
 
                 PackIcon keyFrameIcon = new PackIcon();
                 keyFrameIcon.Width = 10;
@@ -319,9 +766,38 @@ namespace Animaker
             {
                 debugger.Speak("ключ уже существует");
                 Dictionary<String, Object> key = possibleKeys[0];
-                xPostiion.Text = ((int)(key["x"])).ToString();
-                yPostiion.Text = ((int)(key["y"])).ToString();
-                mainCurve.Point1 = new Point(((int)(keyframes[keyframes.IndexOf(key)]["x"])), ((int)(keyframes[keyframes.IndexOf(key)]["y"])));
+                if (selectedPoint == 1)
+                {
+                    xPostiion.Text = ((int)(key["x1"])).ToString();
+                    yPostiion.Text = ((int)(key["y1"])).ToString();
+                    Canvas.SetLeft(pointSelector, ((int)(keyframes[keyframes.IndexOf(key)]["x1"])) - pointSelector.Width / 2);
+                    Canvas.SetTop(pointSelector, ((int)(keyframes[keyframes.IndexOf(key)]["y1"])) - pointSelector.Height / 2);
+                }
+                else if (selectedPoint == 2)
+                {
+                    xPostiion.Text = ((int)(key["x2"])).ToString();
+                    yPostiion.Text = ((int)(key["y2"])).ToString();
+                    Canvas.SetLeft(pointSelector, ((int)(keyframes[keyframes.IndexOf(key)]["x2"])) - pointSelector.Width / 2);
+                    Canvas.SetTop(pointSelector, ((int)(keyframes[keyframes.IndexOf(key)]["y2"])) - pointSelector.Height / 2);
+                }
+                else if (selectedPoint == 3)
+                {
+                    xPostiion.Text = ((int)(key["x3"])).ToString();
+                    yPostiion.Text = ((int)(key["y3"])).ToString();
+                    Canvas.SetLeft(pointSelector, ((int)(keyframes[keyframes.IndexOf(key)]["x3"])) - pointSelector.Width / 2);
+                    Canvas.SetTop(pointSelector, ((int)(keyframes[keyframes.IndexOf(key)]["y3"])) - pointSelector.Height / 2);
+                }
+                mainCurve.Point1 = new Point(((int)(keyframes[keyframes.IndexOf(key)]["x1"])), ((int)(keyframes[keyframes.IndexOf(key)]["y1"])));
+                mainCurve.Point2 = new Point(((int)(keyframes[keyframes.IndexOf(key)]["x2"])), ((int)(keyframes[keyframes.IndexOf(key)]["y2"])));
+                mainCurve.Point3 = new Point(((int)(keyframes[keyframes.IndexOf(key)]["x3"])), ((int)(keyframes[keyframes.IndexOf(key)]["y3"])));
+
+                Canvas.SetLeft(pointOne, ((int)(keyframes[keyframes.IndexOf(key)]["x1"])) - pointOne.Width / 2);
+                Canvas.SetTop(pointOne, ((int)(keyframes[keyframes.IndexOf(key)]["y1"])) - pointOne.Height / 2);
+                Canvas.SetLeft(pointTwo, ((int)(keyframes[keyframes.IndexOf(key)]["x2"])) - pointTwo.Width / 2);
+                Canvas.SetTop(pointTwo, ((int)(keyframes[keyframes.IndexOf(key)]["y2"])) - pointTwo.Height / 2);
+                Canvas.SetLeft(pointThree, ((int)(keyframes[keyframes.IndexOf(key)]["x3"])) - pointThree.Width / 2);
+                Canvas.SetTop(pointThree, ((int)(keyframes[keyframes.IndexOf(key)]["y3"])) - pointThree.Height / 2);
+            
             }
 
         }
@@ -333,8 +809,25 @@ namespace Animaker
                 int value = Int32.Parse(((TextBox)(sender)).Text);
                 int cursor = ((int)(timelineCursor.X1));
                 Dictionary<String, Object> key = ((Dictionary<String, Object>)(keyframes.Where((keyframe) => cursor == ((int)(keyframe["meta"]))).ToList()[0]));
-                keyframes[keyframes.IndexOf(key)]["x"] = ((int)(value));
-                mainCurve.Point1 = new Point(value, mainCurve.Point1.Y);
+                if (selectedPoint == 1)
+                {
+                    keyframes[keyframes.IndexOf(key)]["x1"] = ((int)(value));
+                    mainCurve.Point1 = new Point(value, mainCurve.Point1.Y);
+                    Canvas.SetLeft(pointOne, value - pointOne.Width / 2);
+                }
+                else if (selectedPoint == 2)
+                {
+                    keyframes[keyframes.IndexOf(key)]["x2"] = ((int)(value));
+                    mainCurve.Point2 = new Point(value, mainCurve.Point2.Y);
+                    Canvas.SetLeft(pointTwo, value - pointTwo.Width / 2);
+                }
+                else if (selectedPoint == 3)
+                {
+                    keyframes[keyframes.IndexOf(key)]["x3"] = ((int)(value));
+                    mainCurve.Point3 = new Point(value, mainCurve.Point3.Y);
+                    Canvas.SetLeft(pointThree, value - pointThree.Width / 2);
+                }
+                Canvas.SetLeft(pointSelector, value - pointSelector.Width / 2);
             }
         }
 
@@ -345,8 +838,25 @@ namespace Animaker
                 int value = Int32.Parse(((TextBox)(sender)).Text);
                 int cursor = ((int)(timelineCursor.X1));
                 Dictionary<String, Object> key = ((Dictionary<String, Object>)(keyframes.Where((keyframe) => cursor == ((int)(keyframe["meta"]))).ToList()[0]));
-                keyframes[keyframes.IndexOf(key)]["y"] = ((int)(value));
-                mainCurve.Point1 = new Point(mainCurve.Point1.X, value);
+                if (selectedPoint == 1)
+                {
+                    keyframes[keyframes.IndexOf(key)]["y1"] = ((int)(value));
+                    mainCurve.Point1 = new Point(mainCurve.Point1.X, value);
+                    Canvas.SetTop(pointOne, value - pointOne.Height / 2);
+                }
+                else if (selectedPoint == 2)
+                {
+                    keyframes[keyframes.IndexOf(key)]["y2"] = ((int)(value));
+                    mainCurve.Point2 = new Point(mainCurve.Point2.X, value);
+                    Canvas.SetTop(pointTwo, value - pointTwo.Height / 2);
+                }
+                else if (selectedPoint == 3)
+                {
+                    keyframes[keyframes.IndexOf(key)]["y3"] = ((int)(value));
+                    mainCurve.Point3 = new Point(mainCurve.Point3.X, value);
+                    Canvas.SetTop(pointThree, value - pointThree.Height / 2);
+                }
+                Canvas.SetTop(pointSelector, value - pointSelector.Height / 2);
             }
         }
 
@@ -367,17 +877,29 @@ namespace Animaker
                             // добавляем ключ
                             debugger.Speak("добавляем ключ");
                             Dictionary<String, Object> keyframe = new Dictionary<String, Object>();
-                            keyframe.Add("x", 0);
-                            keyframe.Add("y", 0);
+                            keyframe.Add("x1", 0);
+                            keyframe.Add("y1", 0);
+                            keyframe.Add("x2", 35);
+                            keyframe.Add("y2", 200);
+                            keyframe.Add("x3", 100);
+                            keyframe.Add("y3", 0);
                             keyframe.Add("meta", cursor);
                             keyframes.Add(keyframe);
                             xPostiion.Text = "0";
                             yPostiion.Text = "0";
+
+                            Canvas.SetLeft(pointOne, 0 - pointOne.Width / 2);
+                            Canvas.SetLeft(pointOne, 0 - pointOne.Height / 2);
+                            Canvas.SetLeft(pointTwo, 35 - pointTwo.Width / 2);
+                            Canvas.SetLeft(pointTwo, 200 - pointTwo.Height / 2);
+                            Canvas.SetLeft(pointThree, 0 - pointThree.Width / 2);
+                            Canvas.SetLeft(pointThree, 100 - pointThree.Height / 2);
+
                         }
                         else
                         {
-                            xPostiion.Text = ((int)(keyframes[cursor]["x"])).ToString();
-                            yPostiion.Text = ((int)(keyframes[cursor]["y"])).ToString();
+                            xPostiion.Text = ((int)(keyframes[cursor]["x1"])).ToString();
+                            yPostiion.Text = ((int)(keyframes[cursor]["y1"])).ToString();
                         }
                     }
                 }
@@ -391,8 +913,12 @@ namespace Animaker
                         // добавляем ключ
                         debugger.Speak("добавляем ключ");
                         Dictionary<String, Object> keyframe = new Dictionary<String, Object>();
-                        keyframe.Add("x", 0);
-                        keyframe.Add("y", 0);
+                        keyframe.Add("x1", 0);
+                        keyframe.Add("y1", 0);
+                        keyframe.Add("x2", 0);
+                        keyframe.Add("y2", 0);
+                        keyframe.Add("x3", 0);
+                        keyframe.Add("y3", 0);
                         keyframe.Add("meta", cursor);
                         keyframes.Add(keyframe);
                         xPostiion.Text = "0";
@@ -400,8 +926,8 @@ namespace Animaker
                     }
                     else
                     {
-                        xPostiion.Text = ((int)(keyframes[cursor]["x"])).ToString();
-                        yPostiion.Text = ((int)(keyframes[cursor]["y"])).ToString();
+                        xPostiion.Text = ((int)(keyframes[cursor]["x1"])).ToString();
+                        yPostiion.Text = ((int)(keyframes[cursor]["y1"])).ToString();
                     }
                 }
             }
@@ -410,6 +936,39 @@ namespace Animaker
         private void ClearFocusHandler(object sender, MouseEventArgs e)
         {
             Keyboard.ClearFocus();
+            Point cursorPosition = e.GetPosition(drawArea);
+            int selectorThreshold = 0;
+            if (curve.RenderedGeometry.StrokeContains(new Pen(), cursorPosition, selectorThreshold, ToleranceType.Absolute))
+            {
+                if (mainCurve.Point1.X == cursorPosition.X || mainCurve.Point2.X == cursorPosition.X || mainCurve.Point3.X == cursorPosition.X)
+                {
+                    Canvas.SetLeft(pointSelector, cursorPosition.X - pointSelector.Width / 2);
+                    Canvas.SetTop(pointSelector, cursorPosition.Y - pointSelector.Height / 2);
+                    pointSelector.Visibility = Visibility.Visible;
+                    if (mainCurve.Point1.X == cursorPosition.X)
+                    {
+                        debugger.Speak("Точка 1");
+                        selectedPoint = 1;
+                        xPostiion.Text = mainCurve.Point1.X.ToString();
+                        yPostiion.Text = mainCurve.Point1.Y.ToString();
+                    }
+                    else if (mainCurve.Point2.X == cursorPosition.X)
+                    {
+                        debugger.Speak("Точка 2");
+                        selectedPoint = 2;
+                        xPostiion.Text = mainCurve.Point2.X.ToString();
+                        yPostiion.Text = mainCurve.Point2.Y.ToString();
+                    }
+                    else if (mainCurve.Point3.X == cursorPosition.X)
+                    {
+                        debugger.Speak("Точка 3");
+                        selectedPoint = 3;
+                        xPostiion.Text = mainCurve.Point3.X.ToString();
+                        yPostiion.Text = mainCurve.Point3.Y.ToString();
+                    }
+                }
+            }
+
         }
 
         private void AnimationCompleteHandler (object sender, EventArgs e)
@@ -425,9 +984,41 @@ namespace Animaker
             {
                 timelineCursor.X1 = ((int)(keyframes[keyframes.IndexOf(key) - 1]["meta"]));
                 timelineCursor.X2 = ((int)(keyframes[keyframes.IndexOf(key) - 1]["meta"]));
-                xPostiion.Text = ((int)(keyframes[keyframes.IndexOf(key) - 1]["x"])).ToString();
-                yPostiion.Text = ((int)(keyframes[keyframes.IndexOf(key) - 1]["y"])).ToString();
-                mainCurve.Point1 = new Point(((int)(keyframes[keyframes.IndexOf(key) - 1]["x"])), ((int)(keyframes[keyframes.IndexOf(key) - 1]["y"])));
+                if (selectedPoint == 1)
+                {
+                    xPostiion.Text = ((int)(keyframes[keyframes.IndexOf(key) - 1]["x1"])).ToString();
+                    yPostiion.Text = ((int)(keyframes[keyframes.IndexOf(key) - 1]["y1"])).ToString();
+                    // mainCurve.Point1 = new Point(((int)(keyframes[keyframes.IndexOf(key) - 1]["x1"])), ((int)(keyframes[keyframes.IndexOf(key) - 1]["y1"])));
+                    Canvas.SetLeft(pointSelector, ((int)(keyframes[keyframes.IndexOf(key) - 1]["x1"])) - pointSelector.Width / 2);
+                    Canvas.SetTop(pointSelector, ((int)(keyframes[keyframes.IndexOf(key) - 1]["y1"])) - pointSelector.Height / 2);
+                }
+                else if (selectedPoint == 2)
+                {
+                    xPostiion.Text = ((int)(keyframes[keyframes.IndexOf(key) - 1]["x2"])).ToString();
+                    yPostiion.Text = ((int)(keyframes[keyframes.IndexOf(key) - 1]["y2"])).ToString();
+                    // mainCurve.Point2 = new Point(((int)(keyframes[keyframes.IndexOf(key) - 1]["x2"])), ((int)(keyframes[keyframes.IndexOf(key) - 1]["y2"])));
+                    Canvas.SetLeft(pointSelector, ((int)(keyframes[keyframes.IndexOf(key) - 1]["x2"])) - pointSelector.Width / 2);
+                    Canvas.SetTop(pointSelector, ((int)(keyframes[keyframes.IndexOf(key) - 1]["y2"])) - pointSelector.Height / 2);
+                }
+                else if (selectedPoint == 3)
+                {
+                    xPostiion.Text = ((int)(keyframes[keyframes.IndexOf(key) - 1]["x3"])).ToString();
+                    yPostiion.Text = ((int)(keyframes[keyframes.IndexOf(key) - 1]["y3"])).ToString();
+                    // mainCurve.Point3 = new Point(((int)(keyframes[keyframes.IndexOf(key) - 1]["x3"])), ((int)(keyframes[keyframes.IndexOf(key) - 1]["y3"])));
+                    Canvas.SetLeft(pointSelector, ((int)(keyframes[keyframes.IndexOf(key) - 1]["x3"])) - pointSelector.Width / 2);
+                    Canvas.SetTop(pointSelector, ((int)(keyframes[keyframes.IndexOf(key) - 1]["y3"])) - pointSelector.Height / 2);
+                }
+                mainCurve.Point1 = new Point(((int)(keyframes[keyframes.IndexOf(key) - 1]["x1"])), ((int)(keyframes[keyframes.IndexOf(key) - 1]["y1"])));
+                mainCurve.Point2 = new Point(((int)(keyframes[keyframes.IndexOf(key) - 1]["x2"])), ((int)(keyframes[keyframes.IndexOf(key) - 1]["y2"])));
+                mainCurve.Point3 = new Point(((int)(keyframes[keyframes.IndexOf(key) - 1]["x3"])), ((int)(keyframes[keyframes.IndexOf(key) - 1]["y3"])));
+
+                Canvas.SetLeft(pointOne, ((int)(keyframes[keyframes.IndexOf(key) - 1]["x1"])) - pointOne.Width / 2);
+                Canvas.SetTop(pointOne, ((int)(keyframes[keyframes.IndexOf(key) - 1]["y1"])) - pointOne.Height / 2);
+                Canvas.SetLeft(pointTwo, ((int)(keyframes[keyframes.IndexOf(key) - 1]["x2"])) - pointTwo.Width / 2);
+                Canvas.SetTop(pointTwo, ((int)(keyframes[keyframes.IndexOf(key) - 1]["y2"])) - pointTwo.Height / 2);
+                Canvas.SetLeft(pointThree, ((int)(keyframes[keyframes.IndexOf(key) - 1]["x3"])) - pointThree.Width / 2);
+                Canvas.SetTop(pointThree, ((int)(keyframes[keyframes.IndexOf(key) - 1]["y3"])) - pointThree.Height / 2);
+
             }
         }
 
@@ -439,9 +1030,43 @@ namespace Animaker
             {
                 timelineCursor.X1 = ((int)(keyframes[keyframes.IndexOf(key) + 1]["meta"]));
                 timelineCursor.X2 = ((int)(keyframes[keyframes.IndexOf(key) + 1]["meta"]));
-                xPostiion.Text = ((int)(keyframes[keyframes.IndexOf(key) + 1]["x"])).ToString();
-                yPostiion.Text = ((int)(keyframes[keyframes.IndexOf(key) + 1]["y"])).ToString();
-                mainCurve.Point1 = new Point(((int)(keyframes[keyframes.IndexOf(key) + 1]["x"])), ((int)(keyframes[keyframes.IndexOf(key) + 1]["y"])));
+                if (selectedPoint == 1)
+                {
+                    xPostiion.Text = ((int)(keyframes[keyframes.IndexOf(key) + 1]["x1"])).ToString();
+                    yPostiion.Text = ((int)(keyframes[keyframes.IndexOf(key) + 1]["y1"])).ToString();
+                    // mainCurve.Point1 = new Point(((int)(keyframes[keyframes.IndexOf(key) + 1]["x1"])), ((int)(keyframes[keyframes.IndexOf(key) + 1]["y1"])));
+                    Canvas.SetLeft(pointSelector, ((int)(keyframes[keyframes.IndexOf(key) + 1]["x1"])) - pointSelector.Width / 2);
+                    Canvas.SetTop(pointSelector, ((int)(keyframes[keyframes.IndexOf(key) + 1]["y1"])) - pointSelector.Height / 2);
+                }
+                else if (selectedPoint == 2)
+                {
+                    xPostiion.Text = ((int)(keyframes[keyframes.IndexOf(key) + 1]["x2"])).ToString();
+                    yPostiion.Text = ((int)(keyframes[keyframes.IndexOf(key) + 1]["y2"])).ToString();
+                    // mainCurve.Point2 = new Point(((int)(keyframes[keyframes.IndexOf(key) + 1]["x2"])), ((int)(keyframes[keyframes.IndexOf(key) + 1]["y2"])));
+                    Canvas.SetLeft(pointSelector, ((int)(keyframes[keyframes.IndexOf(key) + 1]["x2"])) - pointSelector.Width / 2);
+                    Canvas.SetTop(pointSelector, ((int)(keyframes[keyframes.IndexOf(key) + 1]["y2"])) - pointSelector.Height / 2);
+                }
+                else if (selectedPoint == 3)
+                {
+                    xPostiion.Text = ((int)(keyframes[keyframes.IndexOf(key) + 1]["x3"])).ToString();
+                    yPostiion.Text = ((int)(keyframes[keyframes.IndexOf(key) + 1]["y3"])).ToString();
+                    // mainCurve.Point3 = new Point(((int)(keyframes[keyframes.IndexOf(key) + 1]["x3"])), ((int)(keyframes[keyframes.IndexOf(key) + 1]["y3"])));
+                    Canvas.SetLeft(pointSelector, ((int)(keyframes[keyframes.IndexOf(key) + 1]["x3"])) - pointSelector.Width / 2);
+                    Canvas.SetTop(pointSelector, ((int)(keyframes[keyframes.IndexOf(key) + 1]["y3"])) - pointSelector.Height / 2);
+                }
+                mainCurve.Point1 = new Point(((int)(keyframes[keyframes.IndexOf(key) + 1]["x1"])), ((int)(keyframes[keyframes.IndexOf(key) + 1]["y1"])));
+                mainCurve.Point2 = new Point(((int)(keyframes[keyframes.IndexOf(key) + 1]["x2"])), ((int)(keyframes[keyframes.IndexOf(key) + 1]["y2"])));
+                mainCurve.Point3 = new Point(((int)(keyframes[keyframes.IndexOf(key) + 1]["x3"])), ((int)(keyframes[keyframes.IndexOf(key) + 1]["y3"])));
+
+                Canvas.SetLeft(pointOne, ((int)(keyframes[keyframes.IndexOf(key) + 1]["x1"])) - pointOne.Width / 2);
+                Canvas.SetTop(pointOne, ((int)(keyframes[keyframes.IndexOf(key) + 1]["y1"])) - pointOne.Height / 2);
+                Canvas.SetLeft(pointTwo, ((int)(keyframes[keyframes.IndexOf(key) + 1]["x2"])) - pointTwo.Width / 2);
+                Canvas.SetTop(pointTwo, ((int)(keyframes[keyframes.IndexOf(key) + 1]["y2"])) - pointTwo.Height / 2);
+                Canvas.SetLeft(pointThree, ((int)(keyframes[keyframes.IndexOf(key) + 1]["x3"])) - pointThree.Width / 2);
+                Canvas.SetTop(pointThree, ((int)(keyframes[keyframes.IndexOf(key) + 1]["y3"])) - pointThree.Height / 2);
+
+                
+
             }
         }
 
@@ -462,6 +1087,40 @@ namespace Animaker
             int keyFrameParam = Int32.Parse(keyFrame.DataContext.ToString());
             keyframes.RemoveAt(keyFrameParam);
             timeline.Children.Remove(keyFrame);
+        }
+
+        private void DrawKeyFramesLabels()
+        {
+            for (int keyFrameLabelIdx = 1; keyFrameLabelIdx <= 500; keyFrameLabelIdx++)
+            {
+                TextBlock keyFrameLabel = new TextBlock();
+                keyFrameLabel.Text = (-48 + 48 * keyFrameLabelIdx).ToString();
+                keyFrameLabel.Foreground = Brushes.White;
+                keyFrameLabel.FontSize = 10;
+                timeline.Children.Add(keyFrameLabel);
+                Canvas.SetLeft(keyFrameLabel, -48 + 48 * keyFrameLabelIdx);
+                Canvas.SetTop(keyFrameLabel, 15);
+
+                TextBlock secondLabel = new TextBlock();
+                secondLabel.Text = (-1 + keyFrameLabelIdx).ToString();
+                secondLabel.Foreground = Brushes.White;
+                secondLabel.FontSize = 10;
+                secondLabel.FontWeight = FontWeights.ExtraBlack;
+                // secondLabel.Width = 100;
+                secondLabel.HorizontalAlignment = HorizontalAlignment.Center;
+                timeline.Children.Add(secondLabel);
+                int secondIndent = 5;
+                if (keyFrameLabel.Text.Length <= 1)
+                {
+                    secondIndent = 0;
+                }
+                else if (keyFrameLabel.Text.Length <= 3)
+                {
+                    secondIndent = 2;
+                }
+                Canvas.SetLeft(secondLabel, -48 + 48 * keyFrameLabelIdx + secondIndent);
+                Canvas.SetTop(secondLabel, 35);
+            }
         }
 
     }

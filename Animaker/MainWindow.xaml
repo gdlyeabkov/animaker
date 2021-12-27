@@ -61,8 +61,8 @@
                 -->
             </StackPanel>
         </StackPanel>
-        <StackPanel Background="Red" MouseUp="ClearFocusHandler">
-            <Canvas>
+        <StackPanel Background="Red" x:Name="drawArea" MouseUp="ClearFocusHandler">
+            <Canvas x:Name="canvas">
                 <Path x:Name="curve" Stroke="Black" StrokeThickness="1">
                     <Path.Data>
                         <PathGeometry>
@@ -71,7 +71,7 @@
                                     <PathFigure.Segments>
                                         <PathSegmentCollection>
                                             <BezierSegment x:Name="mainCurve" Point1="0 0" Point2="35 200" Point3="100 0">
-                                                
+
                                             </BezierSegment>
                                         </PathSegmentCollection>
                                     </PathFigure.Segments>
@@ -80,6 +80,10 @@
                         </PathGeometry>
                     </Path.Data>
                 </Path>
+                <Ellipse x:Name="pointSelector" Fill="Blue" Canvas.Left="-2.4" Canvas.Top="-2.5" Width="5" Height="5" Visibility="Visible" Panel.ZIndex="5" />
+                <Ellipse x:Name="pointOne" Fill="White" Canvas.Left="-1" Canvas.Top="0" Width="2" Height="2" />
+                <Ellipse x:Name="pointTwo" Fill="White" Canvas.Left="40" Canvas.Top="88" Width="2" Height="2" />
+                <Ellipse x:Name="pointThree" Fill="White" Canvas.Left="99" Canvas.Top="0" Width="2" Height="2" />
             </Canvas>
         </StackPanel>
     </DockPanel>
