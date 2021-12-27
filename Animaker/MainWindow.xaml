@@ -8,9 +8,20 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         WindowState="Maximized" Title="Аниматрон" Height="450" Width="800" KeyUp="GlobalHotKeysHandler">
     <DockPanel>
+        <!--s
+        <Menu>
+            <MenuItem Header="Правка">
+                <MenuItem x:Name="currentMode" Header="Режим">
+                    <MenuItem Header="Редактировать" Click="SetDrawModeHandler" />
+                    <MenuItem Header="Анимировать" IsChecked="True" Click="SetAnimationModeHandler" />
+                </MenuItem>
+            </MenuItem>
+        </Menu>
+        -->
         <StackPanel DockPanel.Dock="Top" Background="Black" Height="25">
             <StackPanel HorizontalAlignment="Center" Height="25" Orientation="Horizontal">
                 <materialDesign:PackIcon Kind="Play" VerticalAlignment="Center" Foreground="Green" MouseUp="PlayAnimationHandler" />
+                <materialDesign:PackIcon x:Name="currentMode" Kind="Animation" Margin="15, 0" VerticalAlignment="Center" Foreground="Green" MouseUp="ToggleModeHandler" />
             </StackPanel>
         </StackPanel>
         <DockPanel DockPanel.Dock="Bottom" Height="150">
@@ -62,12 +73,12 @@
             </StackPanel>
         </StackPanel>
         <StackPanel Background="Red" x:Name="drawArea" MouseUp="ClearFocusHandler">
-            <Canvas x:Name="canvas">
-                <Path x:Name="curve" Stroke="Black" StrokeThickness="1">
+            <Canvas x:Name="canvas" MouseMove="DrawCurveHandler">
+                <Path x:Name="curve" Stroke="Cyan" StrokeThickness="1">
                     <Path.Data>
                         <PathGeometry>
                             <PathGeometry.Figures>
-                                <PathFigure>
+                                <PathFigure x:Name="startFigure">
                                     <PathFigure.Segments>
                                         <PathSegmentCollection>
                                             <BezierSegment x:Name="mainCurve" Point1="0 0" Point2="35 200" Point3="100 0">

@@ -28,6 +28,12 @@ namespace Animaker
         public List<Dictionary<String, Object>> keyframes;
         public List<PointAnimation> animations;
         public int selectedPoint = 1;
+        public string mode = "Animation";
+        public BezierSegment bezierSegment;
+        public int drawCurveStep = 1;
+        public List<BezierSegment> bezierSegments;
+        public List<Path> paths;
+        public List<PathFigure> figures;
 
         public MainWindow()
         {
@@ -51,11 +57,28 @@ namespace Animaker
 
             DrawKeyFramesLabels();
 
+            bezierSegment = mainCurve;
+
+            bezierSegments = new List<BezierSegment>()
+            {
+                mainCurve
+            };
+            paths = new List<Path>()
+            {
+                curve
+            };
+            figures = new List<PathFigure>()
+            {
+                startFigure
+            };
+
         }
 
         private void PlayAnimationHandler(object sender, MouseButtonEventArgs e)
         {
-            
+
+            curve.Stroke = Brushes.Black;
+
             pointSelector.Visibility = Visibility.Collapsed;
             pointOne.Visibility = Visibility.Collapsed;
             pointTwo.Visibility = Visibility.Collapsed;
@@ -682,6 +705,8 @@ namespace Animaker
                         pointTwo.Visibility = Visibility.Visible;
                         pointThree.Visibility = Visibility.Visible;
 
+                        curve.Stroke = Brushes.Cyan;
+
                     }
                 };
             }
@@ -743,7 +768,7 @@ namespace Animaker
                     xPostiion.Text = "100";
                     yPostiion.Text = "0";
                 }
-                
+                figures[paths.IndexOf(curve)].StartPoint = new Point(0, 0);
                 mainCurve.Point1 = new Point(0, 0);
                 mainCurve.Point2 = new Point(35, 200);
                 mainCurve.Point3 = new Point(100, 0);
@@ -761,6 +786,29 @@ namespace Animaker
                 keyFrameIcon.ContextMenu = keyFrameIconContextMenu;
                 Canvas.SetLeft(keyFrameIcon, cursor - keyFrameIcon.Width / 2);
                 timeline.Children.Add(keyFrameIcon);
+
+                // selectedPoint = 1;
+                if (selectedPoint == 1)
+                {
+                    Canvas.SetLeft(pointSelector, mainCurve.Point1.X - pointSelector.Width / 2);
+                    Canvas.SetTop(pointSelector, mainCurve.Point1.Y - pointSelector.Height / 2);
+                }
+                else if (selectedPoint == 2)
+                {
+                    Canvas.SetLeft(pointSelector, mainCurve.Point2.X - pointSelector.Width / 2);
+                    Canvas.SetTop(pointSelector, mainCurve.Point2.Y - pointSelector.Height / 2);
+                }
+                else if (selectedPoint == 3)
+                {
+                    Canvas.SetLeft(pointSelector, mainCurve.Point3.X - pointSelector.Width / 2);
+                    Canvas.SetTop(pointSelector, mainCurve.Point3.Y - pointSelector.Height / 2);
+                }
+                Canvas.SetLeft(pointOne, mainCurve.Point1.X - pointOne.Width / 2);
+                Canvas.SetTop(pointOne, mainCurve.Point1.Y - pointOne.Height / 2);
+                Canvas.SetLeft(pointTwo, mainCurve.Point2.X - pointTwo.Width / 2);
+                Canvas.SetTop(pointTwo, mainCurve.Point2.Y - pointTwo.Height / 2);
+                Canvas.SetLeft(pointThree, mainCurve.Point3.X - pointThree.Width / 2);
+                Canvas.SetTop(pointThree, mainCurve.Point3.Y - pointThree.Height / 2);
 
             } else
             {
@@ -935,37 +983,138 @@ namespace Animaker
 
         private void ClearFocusHandler(object sender, MouseEventArgs e)
         {
-            Keyboard.ClearFocus();
-            Point cursorPosition = e.GetPosition(drawArea);
-            int selectorThreshold = 0;
-            if (curve.RenderedGeometry.StrokeContains(new Pen(), cursorPosition, selectorThreshold, ToleranceType.Absolute))
+            
+            if (mode == "Animation")
             {
-                if (mainCurve.Point1.X == cursorPosition.X || mainCurve.Point2.X == cursorPosition.X || mainCurve.Point3.X == cursorPosition.X)
+                Keyboard.ClearFocus();
+                Point cursorPosition = e.GetPosition(canvas);
+                int selectorThreshold = 0;
+                if (curve.RenderedGeometry.StrokeContains(new Pen(), cursorPosition, selectorThreshold, ToleranceType.Absolute))
                 {
-                    Canvas.SetLeft(pointSelector, cursorPosition.X - pointSelector.Width / 2);
-                    Canvas.SetTop(pointSelector, cursorPosition.Y - pointSelector.Height / 2);
+                    debugger.Speak("animation");
+                    if (mainCurve.Point1.X == cursorPosition.X || mainCurve.Point2.X == cursorPosition.X || mainCurve.Point3.X == cursorPosition.X)
+                    {
+                        Canvas.SetLeft(pointSelector, cursorPosition.X - pointSelector.Width / 2);
+                        Canvas.SetTop(pointSelector, cursorPosition.Y - pointSelector.Height / 2);
+                        pointSelector.Visibility = Visibility.Visible;
+                        if (mainCurve.Point1.X == cursorPosition.X)
+                        {
+                            debugger.Speak("Точка 1");
+                            selectedPoint = 1;
+                            xPostiion.Text = mainCurve.Point1.X.ToString();
+                            yPostiion.Text = mainCurve.Point1.Y.ToString();
+                        }
+                        else if (mainCurve.Point2.X == cursorPosition.X)
+                        {
+                            debugger.Speak("Точка 2");
+                            selectedPoint = 2;
+                            xPostiion.Text = mainCurve.Point2.X.ToString();
+                            yPostiion.Text = mainCurve.Point2.Y.ToString();
+                        }
+                        else if (mainCurve.Point3.X == cursorPosition.X)
+                        {
+                            debugger.Speak("Точка 3");
+                            selectedPoint = 3;
+                            xPostiion.Text = mainCurve.Point3.X.ToString();
+                            yPostiion.Text = mainCurve.Point3.Y.ToString();
+                        }
+                    }
+                }
+                else if (paths.Where((path) => path.RenderedGeometry.StrokeContains(new Pen(), cursorPosition, selectorThreshold, ToleranceType.Absolute)).ToList().Count() >= 1)
+                {
+                    curve.Stroke = Brushes.Black;
+                    curve = ((Path)(paths.Where((path) => path.RenderedGeometry.StrokeContains(new Pen(), cursorPosition, selectorThreshold, ToleranceType.Absolute)).ToList()[0]));
+                    mainCurve = ((BezierSegment)(((BezierSegment)(((PathSegmentCollection)(((PathFigure)(((PathFigureCollection)((PathGeometry)(curve.Data)).Figures))[0])).Segments))[0])));
+                    curve.Stroke = Brushes.Cyan;
+                    debugger.Speak("сменил кривую");
+
+                    // здесь
+                    selectedPoint = 1;
+                    Canvas.SetLeft(pointSelector, mainCurve.Point1.X - pointSelector.Width / 2);
+                    Canvas.SetTop(pointSelector, mainCurve.Point1.Y - pointSelector.Height / 2);
+                    Canvas.SetLeft(pointOne, mainCurve.Point1.X - pointOne.Width / 2);
+                    Canvas.SetTop(pointOne, mainCurve.Point1.Y - pointOne.Height / 2);
+                    Canvas.SetLeft(pointTwo, mainCurve.Point2.X - pointTwo.Width / 2);
+                    Canvas.SetTop(pointTwo, mainCurve.Point2.Y - pointTwo.Height / 2);
+                    Canvas.SetLeft(pointThree, mainCurve.Point3.X - pointThree.Width / 2);
+                    Canvas.SetTop(pointThree, mainCurve.Point3.Y - pointThree.Height / 2);
+
+                    xPostiion.Text = (((int)(mainCurve.Point1.X))).ToString();
+                    yPostiion.Text = (((int)(mainCurve.Point1.Y))).ToString();
+
+                }
+            }
+            else if (mode == "Draw")
+            {
+                if (drawCurveStep == 1)
+                {
+                    System.Windows.Shapes.Path penCurve = new System.Windows.Shapes.Path();
+                    Brush foreGroundColor = Brushes.Black;
+                    penCurve.Stroke = foreGroundColor;
+                    double brushSizePts = 1;
+                    penCurve.StrokeThickness = brushSizePts;
+                    PathGeometry pathGeometry = new PathGeometry();
+                    PathFigureCollection pathFigureCollection = new PathFigureCollection();
+                    PathFigure pathFigure = new PathFigure();
+                    PathSegmentCollection pathSegmentCollection = new PathSegmentCollection();
+                    pathFigure.Segments = pathSegmentCollection;
+                    pathFigure.StartPoint = Mouse.GetPosition(canvas);
+                    pathFigureCollection.Add(pathFigure);
+                    pathGeometry.Figures = pathFigureCollection;
+                    penCurve.Data = pathGeometry;
+                    canvas.Children.Add(penCurve);
+                    bezierSegment = new BezierSegment();
+                    bezierSegment.Point1 = e.GetPosition(canvas);
+                    PathSegment pathSegment = bezierSegment;
+                    pathSegmentCollection.Add(pathSegment);
+                    drawCurveStep++;
+
+                    curve.Stroke = Brushes.Black;
+
+                    curve = penCurve;
+                    curve.Stroke = Brushes.Cyan;
+                    mainCurve = bezierSegment;
+                    paths.Add(penCurve);
+                    figures.Add(pathFigure);
+                    bezierSegments.Add(bezierSegment);
+
+                }
+                else if (drawCurveStep == 2)
+                {
+                    bezierSegment.Point2 = e.GetPosition(canvas);
+                    drawCurveStep++;
+                }
+                else if (drawCurveStep == 3)
+                {
+                    bezierSegment.Point3 = e.GetPosition(canvas);
+                    drawCurveStep = 1;
+                    // MenuItem currentMode = new MenuItem();
+                    /*MenuItem currentModeItem = ((MenuItem)(currentMode.Items[1]));
+                    foreach (MenuItem modeItem in currentMode.Items)
+                    {
+                        modeItem.IsChecked = false;
+                    }
+                    currentModeItem.IsChecked = true;*/
+                    mode = "Animation";
+
+                    pointOne.Visibility = Visibility.Visible;
+                    pointTwo.Visibility = Visibility.Visible;
+                    pointThree.Visibility = Visibility.Visible;
                     pointSelector.Visibility = Visibility.Visible;
-                    if (mainCurve.Point1.X == cursorPosition.X)
-                    {
-                        debugger.Speak("Точка 1");
-                        selectedPoint = 1;
-                        xPostiion.Text = mainCurve.Point1.X.ToString();
-                        yPostiion.Text = mainCurve.Point1.Y.ToString();
-                    }
-                    else if (mainCurve.Point2.X == cursorPosition.X)
-                    {
-                        debugger.Speak("Точка 2");
-                        selectedPoint = 2;
-                        xPostiion.Text = mainCurve.Point2.X.ToString();
-                        yPostiion.Text = mainCurve.Point2.Y.ToString();
-                    }
-                    else if (mainCurve.Point3.X == cursorPosition.X)
-                    {
-                        debugger.Speak("Точка 3");
-                        selectedPoint = 3;
-                        xPostiion.Text = mainCurve.Point3.X.ToString();
-                        yPostiion.Text = mainCurve.Point3.Y.ToString();
-                    }
+
+                    Canvas.SetLeft(pointOne, bezierSegment.Point1.X - pointOne.Width / 2);
+                    Canvas.SetTop(pointOne, bezierSegment.Point1.Y - pointOne.Height / 2);
+                    Canvas.SetLeft(pointTwo, bezierSegment.Point2.X - pointTwo.Width / 2);
+                    Canvas.SetTop(pointTwo, bezierSegment.Point2.Y - pointTwo.Height / 2);
+                    Canvas.SetLeft(pointThree, bezierSegment.Point3.X - pointThree.Width / 2);
+                    Canvas.SetTop(pointThree, bezierSegment.Point3.Y - pointThree.Height / 2);
+                    Canvas.SetLeft(pointSelector, bezierSegment.Point1.X - pointSelector.Width / 2);
+                    Canvas.SetTop(pointSelector, bezierSegment.Point1.Y - pointSelector.Height / 2);
+                    selectedPoint = 1;
+
+                    xPostiion.Text = (((int)(mainCurve.Point1.X))).ToString();
+                    yPostiion.Text = (((int)(mainCurve.Point1.Y))).ToString();
+                    
                 }
             }
 
@@ -1123,5 +1272,96 @@ namespace Animaker
             }
         }
 
+        private void SetDrawModeHandler(object sender, RoutedEventArgs e)
+        {
+            // MenuItem currentMode = new MenuItem();
+            /*MenuItem currentModeItem = ((MenuItem)(sender));
+            foreach (MenuItem modeItem in currentMode.Items)
+            {
+                modeItem.IsChecked = false;
+            }
+            currentModeItem.IsChecked = true;*/
+            mode = "Draw";
+
+            pointOne.Visibility = Visibility.Collapsed;
+            pointTwo.Visibility = Visibility.Collapsed;
+            pointThree.Visibility = Visibility.Collapsed;
+            pointSelector.Visibility = Visibility.Collapsed;
+
+        }
+
+        private void SetAnimationModeHandler(object sender, RoutedEventArgs e)
+        {
+            // MenuItem currentMode = new MenuItem();
+            /*MenuItem currentModeItem = ((MenuItem)(sender));
+            foreach (MenuItem modeItem in currentMode.Items)
+            {
+                modeItem.IsChecked = false;
+            }
+            currentModeItem.IsChecked = true;*/
+            mode = "Animation";
+
+            pointOne.Visibility = Visibility.Visible;
+            pointTwo.Visibility = Visibility.Visible;
+            pointThree.Visibility = Visibility.Visible;
+            pointSelector.Visibility = Visibility.Visible;
+
+            Canvas.SetLeft(pointOne, bezierSegment.Point1.X - pointOne.Width / 2);
+            Canvas.SetTop(pointOne, bezierSegment.Point1.Y - pointOne.Height / 2);
+            Canvas.SetLeft(pointTwo, bezierSegment.Point2.X - pointTwo.Width / 2);
+            Canvas.SetTop(pointTwo, bezierSegment.Point2.Y - pointTwo.Height / 2);
+            Canvas.SetLeft(pointThree, bezierSegment.Point3.X - pointThree.Width / 2);
+            Canvas.SetTop(pointThree, bezierSegment.Point3.Y - pointThree.Height / 2);
+            Canvas.SetLeft(pointSelector, bezierSegment.Point1.X - pointSelector.Width / 2);
+            Canvas.SetTop(pointSelector, bezierSegment.Point1.Y - pointSelector.Height / 2);
+            selectedPoint = 1;
+
+        }
+
+        private void DrawCurveHandler(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed && mode == "Draw")
+            {
+                
+            }
+        }
+
+        private void ToggleModeHandler(object sender, RoutedEventArgs e)
+        {
+            if (mode == "Draw")
+            {
+                currentMode.Kind = PackIconKind.Animation;
+                mode = "Animation";
+
+                pointOne.Visibility = Visibility.Visible;
+                pointTwo.Visibility = Visibility.Visible;
+                pointThree.Visibility = Visibility.Visible;
+                pointSelector.Visibility = Visibility.Visible;
+
+                Canvas.SetLeft(pointOne, bezierSegment.Point1.X - pointOne.Width / 2);
+                Canvas.SetTop(pointOne, bezierSegment.Point1.Y - pointOne.Height / 2);
+                Canvas.SetLeft(pointTwo, bezierSegment.Point2.X - pointTwo.Width / 2);
+                Canvas.SetTop(pointTwo, bezierSegment.Point2.Y - pointTwo.Height / 2);
+                Canvas.SetLeft(pointThree, bezierSegment.Point3.X - pointThree.Width / 2);
+                Canvas.SetTop(pointThree, bezierSegment.Point3.Y - pointThree.Height / 2);
+                Canvas.SetLeft(pointSelector, bezierSegment.Point1.X - pointSelector.Width / 2);
+                Canvas.SetTop(pointSelector, bezierSegment.Point1.Y - pointSelector.Height / 2);
+                selectedPoint = 1;
+            
+            }
+            else if (mode == "Animation")
+            {
+
+                currentMode.Kind = PackIconKind.ModeEdit;
+                mode = "Draw";
+
+                pointOne.Visibility = Visibility.Collapsed;
+                pointTwo.Visibility = Visibility.Collapsed;
+                pointThree.Visibility = Visibility.Collapsed;
+                pointSelector.Visibility = Visibility.Collapsed;
+            
+            }
+        }
+        
     }
 }
