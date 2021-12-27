@@ -780,7 +780,9 @@ namespace Animaker
                 ContextMenu keyFrameIconContextMenu = new ContextMenu();
                 MenuItem keyFrameIconContextMenuItem = new MenuItem();
                 keyFrameIconContextMenuItem.Header = "Удалить ключевой кадр";
-                keyFrameIconContextMenuItem.DataContext = ((int)(keyframes.IndexOf(keyframe)));
+                // keyFrameIconContextMenuItem.DataContext = ((int)(keyframes.IndexOf(keyframe)));
+                keyFrameIconContextMenu.DataContext = ((int)(keyframes.IndexOf(keyframe)));
+                keyFrameIconContextMenuItem.DataContext = keyFrameIcon;
                 keyFrameIconContextMenuItem.Click += RemoveKeyFrameHandler;
                 keyFrameIconContextMenu.Items.Add(keyFrameIconContextMenuItem);
                 keyFrameIcon.ContextMenu = keyFrameIconContextMenu;
@@ -1231,10 +1233,10 @@ namespace Animaker
         private void RemoveKeyFrameHandler(object sender, RoutedEventArgs e)
         {
             debugger.Speak("Удалить ключевой кадр");
-            // PackIcon keyFrame = ((PackIcon)(((ContextMenu)(((MenuItem)(sender)).Parent)).Parent));
-            MenuItem keyFrame = ((MenuItem)(sender));
-            int keyFrameParam = Int32.Parse(keyFrame.DataContext.ToString());
-            keyframes.RemoveAt(keyFrameParam);
+            MenuItem menuItem = ((MenuItem)(sender));
+            PackIcon keyFrame = ((PackIcon)(menuItem.DataContext));
+            int keyFrameIdx = ((int)(((ContextMenu)(menuItem.Parent)).DataContext));
+            keyframes.RemoveAt(keyFrameIdx);
             timeline.Children.Remove(keyFrame);
         }
 
